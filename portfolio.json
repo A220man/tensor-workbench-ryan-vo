@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "name": "tensor-workbench-ryan-vo",
+  "owner": "A220man",
+  "email": "ryandtvo@gmail.com",
+  "domain": "AI/ML developer tools",
+  "summary": "Work in progress: tensor-workbench-ryan-vo",
+  "workflows": [
+    "Discover and build SwiftPM projects from workspace with real-time log streaming",
+    "Deploy built .app bundles to physical iOS devices via USB/usbmuxd",
+    "Manage Darwin SDK versions for cross-compilation targets"
+  ],
+  "auth": "oidc-keycloak-saml-broker",
+  "llm_providers": [
+    "openai-compatible",
+    "anthropic",
+    "gemini",
+    "ollama"
+  ],
+  "status": "work-in-progress"
+}

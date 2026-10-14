@@ -1,0 +1,22 @@
+# Backend dependencies - pinned for reproducible builds
+fastapi==0.115.4
+uvicorn[standard]==0.34.0
+sqlalchemy==2.0.36
+aiosqlite==0.20.0
+pydantic==2.10.3
+python-jose[cryptography]==3.3.0
+httpx==0.28.1
+python-multipart==0.0.18
+python-dotenv==1.0.1
+structlog==25.1.0
+tenacity==8.5.0
+watchfiles==1.0.3
+
+# Dev dependencies (installed via pip install -e .[dev])
+# pytest==8.3.4
+# pytest-asyncio==0.23.7
+# pytest-cov==6.0.0
+# httpx==0.28.1
+# ruff==0.8.0
+# mypy==1.13.0
+# types-python-jose==3.3.9

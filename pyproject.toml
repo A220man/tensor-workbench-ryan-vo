@@ -1,0 +1,78 @@
+[project]
+name = "tensor-workbench-ryan-vo"
+version = "1.0.0"
+description = "Cross-platform Xcode replacement: build and deploy iOS apps with SwiftPM on Linux, Windows, macOS"
+readme = "README.md"
+license = {text = "MIT"}
+authors = [
+    {name = "Ryan Vo", email = "ryandtvo@gmail.com"}
+]
+maintainers = [
+    {name = "Ryan Vo", email = "ryandtvo@gmail.com"}
+]
+keywords = ["ios", "swift", "swiftpm", "xcode", "build", "deploy", "cross-platform", "ml", "ai"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Build Tools",
+    "Topic :: Software Development :: Libraries :: Application Frameworks",
+]
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.115.0,<0.116",
+    "uvicorn[standard]>=0.34.0,<0.35",
+    "sqlalchemy[asyncio]>=2.0.36,<2.1",
+    "aiosqlite>=0.20.0,<0.21",
+    "pydantic>=2.10.0,<2.11",
+    "pydantic-settings>=2.7.0,<2.8",
+    "python-jose[cryptography]>=3.3.0,<3.4",
+    "httpx>=0.28.0,<0.29",
+    "python-multipart>=0.0.12,<0.1",
+    "python-dotenv>=1.0.1,<1.1",
+    "structlog>=25.1.0,<26",
+    "tenacity>=8.5.0,<9",
+    "watchfiles>=1.0.0,<2",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.3.0,<9",
+    "pytest-asyncio>=0.23.0,<1",
+    "pytest-cov>=6.0.0,<7",
+    "httpx>=0.28.0,<0.29",
+    "ruff>=0.8.0,<1",
+    "mypy>=1.13.0,<2",
+    "types-python-jose>=3.3.0,<3.4",
+]
+
+[build-system]
+requires = ["setuptools>=75.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+select = ["E", "F", "I", "UP", "B", "C4", "SIM", "T20"]
+ignore = ["S101", "S106", "B008"]
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+
+[tool.mypy]
+python_version = "3.12"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = false
+strict_optional = true
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["backend/tests"]
+pythonpath = ["backend"]
+filterwarnings = ["ignore::DeprecationWarning"]
+
+[tool.setuptools.packages.find]
+where = ["backend"]
+include = ["app*"]
