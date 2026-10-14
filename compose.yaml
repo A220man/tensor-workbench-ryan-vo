@@ -1,0 +1,112 @@
+# Docker Compose for tensor-workbench-ryan-vo
+# Usage: docker compose up --build
+services:
+  # PostgreSQL database (for Keycloak)
+  postgres:
+    image: postgres:16-alpine
+    container_name: tensor-workbench-postgres
+    environment:
+      POSTGRES_DB: keycloak
+      POSTGRES_USER: keycloak
+      POSTGRES_PASSWORD: ${KEYCLOAK_DB_PASSWORD:-change-me}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U keycloak"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - tensor-workbench-network
+
+  # Keycloak for OIDC authentication
+  keycloak:
+    image: quay.io/keycloak/keycloak:25.0
+    container_name: tensor-workbench-keycloak
+    command: start-dev --import-realm
+    environment:
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://postgres:5432/keycloak
+      KC_DB_USERNAME: keycloak
+      KC_DB_PASSWORD: ${KEYCLOAK_DB_PASSWORD:-change-me}
+      KC_BOOTSTRAP_ADMIN_USERNAME: ${KEYCLOAK_ADMIN_USER:-admin}
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-change-me}
+      KC_HOSTNAME: localhost
+      KC_HTTP_ENABLED: "true"
+      KC_PROXY: edge
+    volumes:
+      - ./keycloak/realm-export.json:/opt/keycloak/data/import/realm-export.json:ro
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health/ready"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+    networks:
+      - tensor-workbench-network
+
+  # Backend API
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: tensor-workbench-backend
+    environment:
+      DATABASE_URL: sqlite+aiosqlite:///./data/tensor-workbench.db
+      ENVIRONMENT: development
+      DEBUG: "true"
+      WORKSPACE_ROOT: /workspace
+      KEYCLOAK_URL: http://keycloak:8080
+      KEYCLOAK_REALM: tensor-workbench
+      KEYCLOAK_CLIENT_ID: tensor-workbench
+      KEYCLOAK_CLIENT_SECRET: ${KEYCLOAK_CLIENT_SECRET:-change-me}
+      OIDC_ISSUER: http://keycloak:8080/realms/tensor-workbench
+      DEMO_MODE: "true"
+    volumes:
+      - ./backend/app:/app/app:ro
+      - ./data:/app/data
+      - ./workspace:/workspace
+      - ./pyproject.toml:/app/pyproject.toml:ro
+    ports:
+      - "127.0.0.1:8000:8000"
+    depends_on:
+      keycloak:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/health"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+    networks:
+      - tensor-workbench-network
+
+  # Frontend
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    container_name: tensor-workbench-frontend
+    environment:
+      VITE_API_URL: http://localhost:8000/api
+    ports:
+      - "127.0.0.1:5173:80"
+    depends_on:
+      - backend
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+    networks:
+      - tensor-workbench-network
+
+volumes:
+  postgres_data:
+
+networks:
+  tensor-workbench-network:
+    driver: bridge
