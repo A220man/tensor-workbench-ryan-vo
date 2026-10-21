@@ -4,13 +4,13 @@ Each round completes one feature or repair. Future items are planned, not implem
 
 ## Current round
 
-project-skeleton
+scan-improvement
 
 ## Roadmap
 
 ### project-skeleton — Project Skeleton with FastAPI/React and Core Build Workflow
 
-Status: in_progress
+Status: done
 
 Acceptance:
 - FastAPI backend runs with health endpoint
@@ -20,6 +20,23 @@ Acceptance:
 - Frontend displays project list with build status
 - Backend tests pass (pytest)
 - Frontend typecheck and tests pass (npm run build, npm test)
+
+Implementation: `backend/app/main.py`, `backend/app/api/health.py`, `backend/app/api/version.py`, `backend/app/api/projects.py`, `backend/app/services/project_discovery.py`, `backend/app/models/project.py`, `backend/app/models/base.py`, `backend/app/core/config.py`, `backend/app/core/database.py`, `frontend/src/pages/Dashboard.tsx`, `frontend/src/api/client.ts`, `frontend/src/api/types.ts`, `frontend/src/App.tsx`, `frontend/src/main.tsx`
+
+Tests: `backend/tests/test_health.py`, `backend/tests/test_projects.py`, `backend/tests/test_project_discovery.py`, `frontend/src/pages/__tests__/Dashboard.test.tsx`, `frontend/src/components/ui/__tests__/ui.test.tsx`
+
+### scan-improvement — Scan Workspace Added/Updated Tracking
+
+Status: done
+
+Acceptance:
+- Scan endpoint returns accurate added/updated project counts
+- Service tracks whether each discovered project is new or updated
+- Tests verify added/updated counts
+
+Implementation: `backend/app/services/project_discovery.py`, `backend/app/api/projects.py`
+
+Tests: `backend/tests/test_project_discovery.py`
 
 ### swiftpm-build — SwiftPM Build Orchestration
 

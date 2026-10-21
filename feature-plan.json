@@ -1,1 +1,135 @@
-{"schema_version":1,"current_feature":"project-skeleton","features":[{"id":"project-skeleton","title":"Project Skeleton with FastAPI/React and Core Build Workflow","status":"in_progress","acceptance":["FastAPI backend runs with health endpoint","React frontend builds and serves dashboard","Docker Compose starts backend, frontend, and Keycloak","Backend lists SwiftPM projects from workspace directory","Frontend displays project list with build status","Backend tests pass (pytest)","Frontend typecheck and tests pass (npm run build, npm test)"],"implementation":[],"tests":[]},{"id":"swiftpm-build","title":"SwiftPM Build Orchestration","status":"planned","acceptance":["Backend can trigger `swift build` for a selected project","Build logs streamed to frontend via SSE/WebSocket","Build artifacts (binary, .app bundle) listed after success","Cross-compilation target selection (device/simulator)"],"implementation":[],"tests":[]},{"id":"device-management","title":"iOS Device Connection and Deployment","status":"planned","acceptance":["Backend detects connected iOS devices via usbmuxd/ideviceinstaller","Frontend shows device list with connection status","Deploy .app bundle to selected device","Address 'stuck on Connecting' with proper logging/timeout handling"],"implementation":[],"tests":[]},{"id":"sdk-management","title":"Darwin SDK Installation and Status","status":"planned","acceptance":["Backend can download/install Darwin SDK from Apple","SDK status endpoint shows installed versions","Frontend SDK manager with install/remove actions"],"implementation":[],"tests":[]},{"id":"apple-auth","title":"Apple Developer Authentication","status":"planned","acceptance":["OIDC login with Keycloak (configured for Apple ID broker)","2FA handling with proper timeout/fallback","App Store Connect API token management","Capability registration (WeatherKit, etc.)"],"implementation":[],"tests":[]},{"id":"xcode-project-import","title":"Xcode Project Import/Conversion","status":"planned","acceptance":["Parse .xcodeproj/.xcworkspace files","Convert to SwiftPM Package.swift","Preserve targets, schemes, build settings"],"implementation":[],"tests":[]},{"id":"simulator-support","title":"iOS Simulator on Linux/Windows","status":"planned","acceptance":["Research feasibility document","QEMU/KVM-based approach or remote macOS runner integration","Proof-of-concept for headless simulator"],"implementation":[],"tests":[]}]}
+{
+  "schema_version": 1,
+  "current_feature": "scan-improvement",
+  "features": [
+    {
+      "id": "project-skeleton",
+      "title": "Project Skeleton with FastAPI/React and Core Build Workflow",
+      "status": "done",
+      "acceptance": [
+        "FastAPI backend runs with health endpoint",
+        "React frontend builds and serves dashboard",
+        "Docker Compose starts backend, frontend, and Keycloak",
+        "Backend lists SwiftPM projects from workspace directory",
+        "Frontend displays project list with build status",
+        "Backend tests pass (pytest)",
+        "Frontend typecheck and tests pass (npm run build, npm test)"
+      ],
+      "implementation": [
+        "backend/app/main.py",
+        "backend/app/api/health.py",
+        "backend/app/api/version.py",
+        "backend/app/api/projects.py",
+        "backend/app/services/project_discovery.py",
+        "backend/app/models/project.py",
+        "backend/app/models/base.py",
+        "backend/app/core/config.py",
+        "backend/app/core/database.py",
+        "frontend/src/pages/Dashboard.tsx",
+        "frontend/src/api/client.ts",
+        "frontend/src/api/types.ts",
+        "frontend/src/App.tsx",
+        "frontend/src/main.tsx"
+      ],
+      "tests": [
+        "backend/tests/test_health.py",
+        "backend/tests/test_projects.py",
+        "backend/tests/test_project_discovery.py",
+        "frontend/src/pages/__tests__/Dashboard.test.tsx",
+        "frontend/src/components/ui/__tests__/ui.test.tsx"
+      ]
+    },
+    {
+      "id": "scan-improvement",
+      "title": "Scan Workspace Added/Updated Tracking",
+      "status": "done",
+      "acceptance": [
+        "Scan endpoint returns accurate added/updated project counts",
+        "Service tracks whether each discovered project is new or updated",
+        "Tests verify added/updated counts"
+      ],
+      "implementation": [
+        "backend/app/services/project_discovery.py",
+        "backend/app/api/projects.py"
+      ],
+      "tests": [
+        "backend/tests/test_project_discovery.py"
+      ]
+    },
+    {
+      "id": "swiftpm-build",
+      "title": "SwiftPM Build Orchestration",
+      "status": "planned",
+      "acceptance": [
+        "Backend can trigger `swift build` for a selected project",
+        "Build logs streamed to frontend via SSE/WebSocket",
+        "Build artifacts (binary, .app bundle) listed after success",
+        "Cross-compilation target selection (device/simulator)"
+      ],
+      "implementation": [],
+      "tests": []
+    },
+    {
+      "id": "device-management",
+      "title": "iOS Device Connection and Deployment",
+      "status": "planned",
+      "acceptance": [
+        "Backend detects connected iOS devices via usbmuxd/ideviceinstaller",
+        "Frontend shows device list with connection status",
+        "Deploy .app bundle to selected device",
+        "Address 'stuck on Connecting' with proper logging/timeout handling"
+      ],
+      "implementation": [],
+      "tests": []
+    },
+    {
+      "id": "sdk-management",
+      "title": "Darwin SDK Installation and Status",
+      "status": "planned",
+      "acceptance": [
+        "Backend can download/install Darwin SDK from Apple",
+        "SDK status endpoint shows installed versions",
+        "Frontend SDK manager with install/remove actions"
+      ],
+      "implementation": [],
+      "tests": []
+    },
+    {
+      "id": "apple-auth",
+      "title": "Apple Developer Authentication",
+      "status": "planned",
+      "acceptance": [
+        "OIDC login with Keycloak (configured for Apple ID broker)",
+        "2FA handling with proper timeout/fallback",
+        "App Store Connect API token management",
+        "Capability registration (WeatherKit, etc.)"
+      ],
+      "implementation": [],
+      "tests": []
+    },
+    {
+      "id": "xcode-project-import",
+      "title": "Xcode Project Import/Conversion",
+      "status": "planned",
+      "acceptance": [
+        "Parse .xcodeproj/.xcworkspace files",
+        "Convert to SwiftPM Package.swift",
+ "Preserve targets, schemes, build settings"
+      ],
+      "implementation": [],
+      "tests": []
+    },
+    {
+      "id": "simulator-support",
+      "title": "iOS Simulator on Linux/Windows",
+      "status": "planned",
+      "acceptance": [
+        "Research feasibility document",
+        "QEMU/KVM-based approach or remote macOS runner integration",
+        "Proof-of-concept for headless simulator"
+      ],
+      "implementation": [],
+      "tests": []
+    }
+  ]
+}

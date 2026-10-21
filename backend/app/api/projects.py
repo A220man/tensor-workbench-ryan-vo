@@ -152,11 +152,7 @@ async def scan_workspace(
     updated = 0
 
     try:
-        projects = await service.scan_workspace(workspace_root)
-        for project in projects:
-            # We can't easily distinguish added vs updated here without more logic
-            # For now, count all as scanned
-            pass
+        projects, added, updated = await service.scan_workspace(workspace_root)
     except Exception as e:
         errors.append(str(e))
 
