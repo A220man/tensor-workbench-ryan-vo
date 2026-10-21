@@ -18,18 +18,32 @@ class ProjectDiscoveryService:
     def __init__(self, session: AsyncSession):
         self.session = session
 
-    async def scan_workspace(self, workspace_root: Path) -> list[Project]:
-        """Scan workspace for Package.swift files and create/update projects."""
+    async def scan_workspace(self, workspace_root: Path) -> tuple[list[Project], int, int]:
+        """Scan workspace for Package.swift files and create/update projects.
+        
+        Returns:
+            Tuple of (projects, added_count, updated_count)
+        """
         projects = []
+        added = 0
+        updated = 0
         for package_swift in workspace_root.rglob("Package.swift"):
-            project = await self._process_package_swift(package_swift)
+            project, is_new = await self._process_package_swift(package_swift)
             if project:
                 projects.append(project)
+                if is_new:
+                    added += 1
+                else:
+                    updated += 1
         await self.session.commit()
-        return projects
+        return projects, added, updated
 
-    async def _process_package_swift(self, package_swift: Path) -> Optional[Project]:
-        """Process a single Package.swift file."""
+    async def _process_package_swift(self, package_swift: Path) -> tuple[Optional[Project], bool]:
+        """Process a single Package.swift file.
+        
+        Returns:
+            Tuple of (project, is_new) where is_new indicates if project was created.
+        """
         project_path = package_swift.parent
         relative_path = project_path.relative_to(project_path.anchor) if project_path.is_absolute() else project_path
 
@@ -41,6 +55,7 @@ class ProjectDiscoveryService:
         result = await self.session.execute(stmt)
         project = result.scalar_one_or_none()
 
+        is_new = False
         if project is None:
             project = Project(
                 name=metadata.get("name", project_path.name),
@@ -54,6 +69,7 @@ class ProjectDiscoveryService:
                 status=ProjectStatus.UNKNOWN,
             )
             self.session.add(project)
+            is_new = True
         else:
             # Update metadata
             project.name = metadata.get("name", project.name)
@@ -68,7 +84,8 @@ class ProjectDiscoveryService:
         is_valid = await self._validate_project(project_path)
         project.status = ProjectStatus.VALID if is_valid else ProjectStatus.INVALID
 
-        return project
+        return project, is_new
+
 
     def _parse_package_swift(self, package_swift: Path) -> dict:
         """Parse Package.swift for basic metadata."""

@@ -85,10 +85,10 @@ async def test_scan_workspace_creates_projects():
         project_dir = workspace / "MyApp"
         project_dir.mkdir()
         (project_dir / "Package.swift").write_text("""
-// swift-tools-version: 5.9
-import PackageDescription
-let package = Package(name: "MyApp")
-""")
+    // swift-tools-version: 5.9
+    import PackageDescription
+    let package = Package(name: "MyApp")
+    """)
 
         # Mock session
         from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
@@ -103,9 +103,11 @@ let package = Package(name: "MyApp")
             service = ProjectDiscoveryService(session)
             # Mock validation to return True (swift not available in test env)
             with patch.object(service, "_validate_project", return_value=True):
-                projects = await service.scan_workspace(workspace)
+                projects, added, updated = await service.scan_workspace(workspace)
 
             assert len(projects) == 1
+            assert added == 1
+            assert updated == 0
             assert projects[0].name == "MyApp"
             assert projects[0].path == str(project_dir)
             assert projects[0].status == ProjectStatus.VALID
