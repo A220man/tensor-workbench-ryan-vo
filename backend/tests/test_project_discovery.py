@@ -113,3 +113,59 @@ async def test_scan_workspace_creates_projects():
             assert projects[0].status == ProjectStatus.VALID
 
         await engine.dispose()
+
+
+@pytest.mark.asyncio
+async def test_scan_workspace_updates_existing_projects():
+    """Test scanning workspace updates existing project records."""
+    with tempfile.TemporaryDirectory() as tmpdir:
+        workspace = Path(tmpdir)
+        project_dir = workspace / "MyApp"
+        project_dir.mkdir()
+        (project_dir / "Package.swift").write_text("""
+    // swift-tools-version: 5.9
+    import PackageDescription
+    let package = Package(name: "MyApp", version: "1.0.0")
+    """)
+
+        # Mock session
+        from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
+        from app.models.base import Base
+
+        engine = create_async_engine("sqlite+aiosqlite:///:memory:", echo=False)
+        async with engine.begin() as conn:
+            await conn.run_sync(Base.metadata.create_all)
+
+        session_factory = async_sessionmaker(engine, expire_on_commit=False)
+        async with session_factory() as session:
+            service = ProjectDiscoveryService(session)
+            # Mock validation to return True (swift not available in test env)
+            with patch.object(service, "_validate_project", return_value=True):
+                # First scan - should add the project
+                projects, added, updated = await service.scan_workspace(workspace)
+
+            assert len(projects) == 1
+            assert added == 1
+            assert updated == 0
+            assert projects[0].name == "MyApp"
+            assert projects[0].package_version == "1.0.0"
+
+            # Second scan with updated Package.swift - should update the project
+            (project_dir / "Package.swift").write_text("""
+    // swift-tools-version: 5.9
+    import PackageDescription
+    let package = Package(name: "MyApp", version: "2.0.0")
+    """)
+
+            async with session_factory() as session:
+                service = ProjectDiscoveryService(session)
+                with patch.object(service, "_validate_project", return_value=True):
+                    projects, added, updated = await service.scan_workspace(workspace)
+
+            assert len(projects) == 1
+            assert added == 0
+            assert updated == 1
+            assert projects[0].name == "MyApp"
+            assert projects[0].package_version == "2.0.0"
+
+        await engine.dispose()
