@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.2.0 — work-in-progress checkpoint
+
+Partial code published for continued development. Known issues: STATUS.md.
+
 ## 1.1.0 — work-in-progress checkpoint
 
 Partial code published for continued development. Known issues: STATUS.md.
@@ -60,5 +64,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Project discovery service (`scan_workspace`) tracks whether each discovered project is newly created or an existing record update
 
 ### Testing
-- Updated `test_scan_workspace_creates_projects` to verify added/updated counts (1 added, 0 updated for new project)
-- All 13 backend tests pass, 19 frontend tests pass
+- Added `test_scan_workspace_updates_existing_projects` to verify re-scanning returns updated=1 for modified projects
+- All 14 backend tests pass, 19 frontend tests pass
