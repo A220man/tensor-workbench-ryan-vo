@@ -33,10 +33,13 @@ Acceptance:
 - Scan endpoint returns accurate added/updated project counts
 - Service tracks whether each discovered project is new or updated
 - Tests verify added/updated counts
+- Scan response includes added_projects and updated_projects lists with project names
+- Scan endpoint uses BackgroundTasks for better responsiveness
+- Targets and dependencies parsing handles both legacy and new formats
 
 Implementation: `backend/app/services/project_discovery.py`, `backend/app/api/projects.py`
 
-Tests: `backend/tests/test_project_discovery.py`
+Tests: `backend/tests/test_project_discovery.py`, `backend/tests/test_projects.py`
 
 ### swiftpm-build — SwiftPM Build Orchestration
 

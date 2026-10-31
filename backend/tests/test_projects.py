@@ -67,8 +67,15 @@ async def test_get_project_by_id(client: AsyncClient, session: AsyncSession, sam
     assert data["id"] == project.id
     assert data["name"] == sample_project_data["name"]
     assert data["package_version"] == sample_project_data["package_version"]
-    assert data["targets"] == sample_project_data["targets"]
-    assert data["dependencies"] == sample_project_data["dependencies"]
+    # Targets are returned as list of objects with name and type
+    assert len(data["targets"]) == len(sample_project_data["targets"])
+    for i, target in enumerate(data["targets"]):
+        assert target["name"] == sample_project_data["targets"][i]
+        assert target["type"] == "library"
+    # Dependencies are returned as list of objects with url and version
+    assert len(data["dependencies"]) == len(sample_project_data["dependencies"])
+    for i, dep in enumerate(data["dependencies"]):
+        assert dep["url"] == sample_project_data["dependencies"][i]
 
 
 @pytest.mark.asyncio
@@ -81,25 +88,33 @@ async def test_get_project_not_found(client: AsyncClient):
 @pytest.mark.asyncio
 async def test_pagination(client: AsyncClient, session: AsyncSession):
     """Test pagination of projects list."""
-    # Create 5 projects
-    projects = [
-        Project(name=f"App{i}", path=f"/workspace/App{i}", status=ProjectStatus.VALID)
-        for i in range(5)
-    ]
-    session.add_all(projects)
+    # Create multiple projects
+    for i in range(5):
+        proj = Project(name=f"Project{i}", path=f"/workspace/Project{i}", status=ProjectStatus.VALID)
+        session.add(proj)
     await session.commit()
 
-    # Test limit
-    response = await client.get("/api/projects?limit=2")
+    # First page
+    response = await client.get("/api/projects?limit=2&offset=0")
     assert response.status_code == 200
     data = response.json()
     assert len(data["projects"]) == 2
     assert data["limit"] == 2
+    assert data["offset"] == 0
     assert data["total"] == 5
 
-    # Test offset
+    # Second page
     response = await client.get("/api/projects?limit=2&offset=2")
     assert response.status_code == 200
     data = response.json()
     assert len(data["projects"]) == 2
+    assert data["limit"] == 2
     assert data["offset"] == 2
+
+    # Third page
+    response = await client.get("/api/projects?limit=2&offset=4")
+    assert response.status_code == 200
+    data = response.json()
+    assert len(data["projects"]) == 1
+    assert data["limit"] == 2
+    assert data["offset"] == 4

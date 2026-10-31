@@ -46,14 +46,18 @@
       "acceptance": [
         "Scan endpoint returns accurate added/updated project counts",
         "Service tracks whether each discovered project is new or updated",
-        "Tests verify added/updated counts"
+        "Tests verify added/updated counts",
+        "Scan response includes added_projects and updated_projects lists with project names",
+        "Scan endpoint uses BackgroundTasks for better responsiveness",
+        "Targets and dependencies parsing handles both legacy and new formats"
       ],
       "implementation": [
         "backend/app/services/project_discovery.py",
         "backend/app/api/projects.py"
       ],
       "tests": [
-        "backend/tests/test_project_discovery.py"
+        "backend/tests/test_project_discovery.py",
+        "backend/tests/test_projects.py"
       ]
     },
     {
@@ -114,7 +118,7 @@
       "acceptance": [
         "Parse .xcodeproj/.xcworkspace files",
         "Convert to SwiftPM Package.swift",
- "Preserve targets, schemes, build settings"
+        "Preserve targets, schemes, build settings"
       ],
       "implementation": [],
       "tests": []
