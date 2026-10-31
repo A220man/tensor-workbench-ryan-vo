@@ -47,3 +47,4 @@ logs/
 
 # Test coverage
 coverage/
+venv/
