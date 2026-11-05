@@ -18,25 +18,27 @@ class ProjectDiscoveryService:
     def __init__(self, session: AsyncSession):
         self.session = session
 
-    async def scan_workspace(self, workspace_root: Path) -> tuple[list[Project], int, int]:
+    async def scan_workspace(self, workspace_root: Path) -> tuple[list[Project], list[Project], int, int]:
         """Scan workspace for Package.swift files and create/update projects.
         
         Returns:
-            Tuple of (projects, added_count, updated_count)
+            Tuple of (added_projects, updated_projects, added_count, updated_count)
         """
-        projects = []
+        added_projects = []
+        updated_projects = []
         added = 0
         updated = 0
         for package_swift in workspace_root.rglob("Package.swift"):
             project, is_new = await self._process_package_swift(package_swift)
             if project:
-                projects.append(project)
                 if is_new:
+                    added_projects.append(project)
                     added += 1
                 else:
+                    updated_projects.append(project)
                     updated += 1
         await self.session.commit()
-        return projects, added, updated
+        return added_projects, updated_projects, added, updated
 
     async def _process_package_swift(self, package_swift: Path) -> tuple[Optional[Project], bool]:
         """Process a single Package.swift file.
