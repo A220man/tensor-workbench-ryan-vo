@@ -198,9 +198,9 @@ async def scan_workspace(
     async def run_scan():
         nonlocal added, updated, added_projects, updated_projects, errors
         try:
-            projects, added, updated = await service.scan_workspace(workspace_root)
-            added_projects = [p.name for p in projects]
-            updated_projects = []
+            added_projects_list, updated_projects_list, added, updated = await service.scan_workspace(workspace_root)
+            added_projects = [p.name for p in added_projects_list]
+            updated_projects = [p.name for p in updated_projects_list]
         except Exception as e:
             errors.append(str(e))
 

@@ -103,14 +103,15 @@ async def test_scan_workspace_creates_projects():
             service = ProjectDiscoveryService(session)
             # Mock validation to return True (swift not available in test env)
             with patch.object(service, "_validate_project", return_value=True):
-                projects, added, updated = await service.scan_workspace(workspace)
+                added_projects, updated_projects, added, updated = await service.scan_workspace(workspace)
 
-            assert len(projects) == 1
+            assert len(added_projects) == 1
+            assert len(updated_projects) == 0
             assert added == 1
             assert updated == 0
-            assert projects[0].name == "MyApp"
-            assert projects[0].path == str(project_dir)
-            assert projects[0].status == ProjectStatus.VALID
+            assert added_projects[0].name == "MyApp"
+            assert added_projects[0].path == str(project_dir)
+            assert added_projects[0].status == ProjectStatus.VALID
 
         await engine.dispose()
 
@@ -142,13 +143,14 @@ async def test_scan_workspace_updates_existing_projects():
             # Mock validation to return True (swift not available in test env)
             with patch.object(service, "_validate_project", return_value=True):
                 # First scan - should add the project
-                projects, added, updated = await service.scan_workspace(workspace)
+                added_projects, updated_projects, added, updated = await service.scan_workspace(workspace)
 
-            assert len(projects) == 1
+            assert len(added_projects) == 1
+            assert len(updated_projects) == 0
             assert added == 1
             assert updated == 0
-            assert projects[0].name == "MyApp"
-            assert projects[0].package_version == "1.0.0"
+            assert added_projects[0].name == "MyApp"
+            assert added_projects[0].package_version == "1.0.0"
 
             # Second scan with updated Package.swift - should update the project
             (project_dir / "Package.swift").write_text("""
@@ -160,12 +162,13 @@ async def test_scan_workspace_updates_existing_projects():
             async with session_factory() as session:
                 service = ProjectDiscoveryService(session)
                 with patch.object(service, "_validate_project", return_value=True):
-                    projects, added, updated = await service.scan_workspace(workspace)
+                    added_projects, updated_projects, added, updated = await service.scan_workspace(workspace)
 
-            assert len(projects) == 1
+            assert len(added_projects) == 0
+            assert len(updated_projects) == 1
             assert added == 0
             assert updated == 1
-            assert projects[0].name == "MyApp"
-            assert projects[0].package_version == "2.0.0"
+            assert updated_projects[0].name == "MyApp"
+            assert updated_projects[0].package_version == "2.0.0"
 
         await engine.dispose()
