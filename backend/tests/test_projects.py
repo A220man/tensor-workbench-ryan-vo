@@ -3,8 +3,12 @@ import pytest
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
+from unittest.mock import patch
+from pathlib import Path
+import tempfile
 
 from app.models.project import Project, ProjectStatus
+from app.services.project_discovery import ProjectDiscoveryService
 
 
 @pytest.mark.asyncio
@@ -118,3 +122,124 @@ async def test_pagination(client: AsyncClient, session: AsyncSession):
     assert len(data["projects"]) == 1
     assert data["limit"] == 2
     assert data["offset"] == 4
+
+
+@pytest.mark.asyncio
+async def test_scan_workspace(client: AsyncClient, session: AsyncSession, test_settings):
+    """Test scan workspace endpoint creates new projects."""
+    with tempfile.TemporaryDirectory() as tmpdir:
+        workspace = Path(tmpdir)
+        project_dir = workspace / "TestApp"
+        project_dir.mkdir()
+        (project_dir / "Package.swift").write_text("""
+// swift-tools-version: 5.9
+import PackageDescription
+let package = Package(name: "TestApp", version: "1.0.0")
+""")
+
+        # Override workspace_root for this test
+        test_settings.workspace_root = str(workspace)
+
+        # Mock _validate_project to return True
+        with patch.object(ProjectDiscoveryService, "_validate_project", return_value=True):
+            response = await client.post("/api/projects/scan")
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["scanned"] == 1
+        assert data["added"] == 1
+        assert data["updated"] == 0
+        assert "TestApp" in data["added_projects"]
+        assert len(data["updated_projects"]) == 0
+        assert data["errors"] == []
+
+
+@pytest.mark.asyncio
+async def test_scan_workspace_updates_existing(client: AsyncClient, session: AsyncSession, test_settings):
+    """Test scan workspace endpoint updates existing projects."""
+    with tempfile.TemporaryDirectory() as tmpdir:
+        workspace = Path(tmpdir)
+        project_dir = workspace / "TestApp"
+        project_dir.mkdir()
+        (project_dir / "Package.swift").write_text("""
+// swift-tools-version: 5.9
+import PackageDescription
+let package = Package(name: "TestApp", version: "1.0.0")
+""")
+
+        # Override workspace_root for this test
+        test_settings.workspace_root = str(workspace)
+
+        # Mock _validate_project to return True
+        with patch.object(ProjectDiscoveryService, "_validate_project", return_value=True):
+            # First scan - should add
+            response = await client.post("/api/projects/scan")
+            assert response.status_code == 200
+            data = response.json()
+            assert data["added"] == 1
+            assert data["updated"] == 0
+
+            # Update Package.swift
+            (project_dir / "Package.swift").write_text("""
+// swift-tools-version: 5.9
+import PackageDescription
+let package = Package(name: "TestApp", version: "2.0.0")
+""")
+
+            # Second scan - should update
+            response = await client.post("/api/projects/scan")
+            assert response.status_code == 200
+            data = response.json()
+            assert data["added"] == 0
+            assert data["updated"] == 1
+            assert "TestApp" in data["updated_projects"]
+            assert len(data["added_projects"]) == 0
+
+
+@pytest.mark.asyncio
+async def test_scan_workspace_multiple_projects(client: AsyncClient, session: AsyncSession, test_settings):
+    """Test scan workspace with multiple projects."""
+    with tempfile.TemporaryDirectory() as tmpdir:
+        workspace = Path(tmpdir)
+
+        # Create two projects
+        for name in ["App1", "App2"]:
+            project_dir = workspace / name
+            project_dir.mkdir()
+            (project_dir / "Package.swift").write_text(f"""
+// swift-tools-version: 5.9
+import PackageDescription
+let package = Package(name: "{name}", version: "1.0.0")
+""")
+
+        test_settings.workspace_root = str(workspace)
+
+        with patch.object(ProjectDiscoveryService, "_validate_project", return_value=True):
+            response = await client.post("/api/projects/scan")
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["scanned"] == 2
+        assert data["added"] == 2
+        assert set(data["added_projects"]) == {"App1", "App2"}
+
+
+@pytest.mark.asyncio
+async def test_scan_workspace_handles_errors(client: AsyncClient, session: AsyncSession, test_settings):
+    """Test scan workspace handles errors gracefully."""
+    with tempfile.TemporaryDirectory() as tmpdir:
+        workspace = Path(tmpdir)
+        project_dir = workspace / "BadApp"
+        project_dir.mkdir()
+        (project_dir / "Package.swift").write_text("invalid swift code")
+
+        test_settings.workspace_root = str(workspace)
+
+        # Don't mock validation - let it fail
+        response = await client.post("/api/projects/scan")
+
+        # Should still return 200 but with errors
+        assert response.status_code == 200
+        data = response.json()
+        # Project validation fails, so project may be marked invalid or not added
+        assert "errors" in data
