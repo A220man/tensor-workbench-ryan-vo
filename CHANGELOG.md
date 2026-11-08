@@ -1,8 +1,20 @@
 # Changelog
 
+## 1.5.0 — work-in-progress checkpoint
+
+Partial code published for continued development. Known issues: STATUS.md.
+
 ## 1.4.0 — work-in-progress checkpoint
 
 Partial code published for continued development. Known issues: STATUS.md.
+
+### Testing
+- Added API endpoint tests for scan workspace (`POST /api/projects/scan`)
+  - `test_scan_workspace`: verifies new project creation with added/updated counts and project names
+  - `test_scan_workspace_updates_existing`: verifies re-scanning detects updated projects
+  - `test_scan_workspace_multiple_projects`: verifies scanning multiple projects at once
+  - `test_scan_workspace_handles_errors`: verifies graceful error handling for invalid Package.swift
+- All 18 backend tests pass, 19 frontend tests pass
 
 ## 1.3.0 — work-in-progress checkpoint
 
@@ -11,21 +23,6 @@ Partial code published for continued development. Known issues: STATUS.md.
 ## 1.2.0 — work-in-progress checkpoint
 
 Partial code published for continued development. Known issues: STATUS.md.
-
-## 1.1.0 — work-in-progress checkpoint
-
-Partial code published for continued development. Known issues: STATUS.md.
-
-## 1.0.0 — work-in-progress checkpoint
-
-Partial code published for continued development. Known issues: STATUS.md.
-
-All notable changes to this project will be documented in this file.
-
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-
-## [1.2.0] - 2026-10-31
 
 ### Enhanced
 - Scan workspace endpoint (`POST /api/projects/scan`) now returns `added_projects` and `updated_projects` lists with project names for better visibility
@@ -40,7 +37,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated `test_get_project_by_id` to validate structured targets/dependencies response format
 - All 14 backend tests pass, 19 frontend tests pass
 
-## [1.1.0] - 2026-10-21
+## [1.1.0] - 2026-10-31
 
 ### Fixed
 - Scan workspace endpoint (`POST /api/projects/scan`) now returns accurate `added` and `updated` project counts instead of always zero
