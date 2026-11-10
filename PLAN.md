@@ -36,10 +36,11 @@ Acceptance:
 - Scan response includes added_projects and updated_projects lists with project names
 - Scan endpoint uses BackgroundTasks for better responsiveness
 - Targets and dependencies parsing handles both legacy and new formats
+- Frontend displays added/updated project names in a notification banner after scan
 
-Implementation: `backend/app/services/project_discovery.py`, `backend/app/api/projects.py`
+Implementation: `backend/app/services/project_discovery.py`, `backend/app/api/projects.py`, `frontend/src/pages/Dashboard.tsx`, `frontend/src/api/types.ts`
 
-Tests: `backend/tests/test_project_discovery.py`, `backend/tests/test_projects.py`
+Tests: `backend/tests/test_project_discovery.py`, `backend/tests/test_projects.py`, `frontend/src/pages/__tests__/Dashboard.test.tsx`
 
 ### swiftpm-build — SwiftPM Build Orchestration
 

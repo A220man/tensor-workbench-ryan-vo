@@ -1,6 +1,14 @@
 # Changelog
 
+## 1.6.0 — work-in-progress checkpoint
+
+Partial code published for continued development. Known issues: STATUS.md.
+
 ## 1.5.0 — work-in-progress checkpoint
+
+### Enhanced
+- Frontend now displays detailed scan results showing added/updated project names in a notification banner after workspace scan
+- Added `added_projects` and `updated_projects` arrays to `ScanResponse` type for better visibility
 
 Partial code published for continued development. Known issues: STATUS.md.
 
