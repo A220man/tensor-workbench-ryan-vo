@@ -1,7 +1,7 @@
 /** Main Dashboard page - lists SwiftPM projects with build status. */
 import React, { useEffect, useState, useCallback } from "react";
-import { RefreshCw, ExternalLink, Hammer, Package, ChevronDown, ChevronUp } from "lucide-react";
-import { api, type Project, type ProjectStatus, type BuildStatus } from "../api";
+import { RefreshCw, ExternalLink, Hammer, Package, ChevronDown, ChevronUp, CheckCircle, AlertCircle } from "lucide-react";
+import { api, type Project, type ProjectStatus, type BuildStatus, type ScanResponse } from "../api";
 import { Button, Badge, LoadingSpinner, EmptyState } from "../components/ui";
 
 const statusConfig: Record<ProjectStatus, { label: string; variant: "success" | "warning" | "error" | "info" | "neutral" }> = {
@@ -26,13 +26,13 @@ export const Dashboard: React.FC = () => {
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [scanResult, setScanResult] = useState<ScanResponse | null>(null);
   const [page, setPage] = useState(0);
   const [pageSize] = useState(20);
   const [sortConfig, setSortConfig] = useState<{ key: keyof Project; direction: "asc" | "desc" }>({
     key: "updated_at",
     direction: "desc",
   });
-
   const fetchProjects = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -58,7 +58,8 @@ export const Dashboard: React.FC = () => {
 
   const handleScan = async () => {
     try {
-      await api.scanWorkspace();
+      const result = await api.scanWorkspace();
+      setScanResult(result);
       await fetchProjects();
     } catch (err) {
       const message = err instanceof Error ? err.message : "Scan failed";
@@ -114,6 +115,38 @@ export const Dashboard: React.FC = () => {
           <Button variant="ghost" size="sm" onClick={fetchProjects}>
             Dismiss
           </Button>
+        </div>
+      )}
+
+      {/* Scan result notification */}
+      {scanResult && (
+        <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg text-green-800 text-sm" role="status" aria-live="polite">
+          <div className="flex items-start gap-3">
+            <CheckCircle size={20} className="flex-shrink-0 mt-0.5" />
+            <div className="flex-1">
+              <p className="font-medium">Scan completed</p>
+              <p className="text-xs mt-1">{scanResult.scanned} projects scanned ({scanResult.added} added, {scanResult.updated} updated)</p>
+              {scanResult.added_projects.length > 0 && (
+                <div className="mt-2 text-xs">
+                  <span className="font-medium">Added:</span> {scanResult.added_projects.join(", ")}
+                </div>
+              )}
+              {scanResult.updated_projects.length > 0 && (
+                <div className="mt-2 text-xs">
+                  <span className="font-medium">Updated:</span> {scanResult.updated_projects.join(", ")}
+                </div>
+              )}
+              {scanResult.errors.length > 0 && (
+                <div className="mt-2 text-xs text-red-700">
+                  <span className="font-medium">Errors:</span> {scanResult.errors.join(", ")}
+                </div>
+              )}
+            </div>
+            <Button variant="ghost" size="sm" onClick={() => setScanResult(null)} className="flex-shrink-0">
+              <span className="sr-only">Dismiss</span>
+              <AlertCircle size={16} />
+            </Button>
+          </div>
         </div>
       )}
 

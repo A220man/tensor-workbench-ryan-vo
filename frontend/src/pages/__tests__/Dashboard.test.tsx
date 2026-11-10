@@ -127,6 +127,8 @@ describe("Dashboard", () => {
       scanned: 1,
       added: 1,
       updated: 0,
+      added_projects: ["TestProject"],
+      updated_projects: [],
       errors: [],
     });
 

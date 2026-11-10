@@ -53,6 +53,8 @@ export interface ScanResponse {
   scanned: number;
   added: number;
   updated: number;
+  added_projects: string[];
+  updated_projects: string[];
   errors: string[];
 }
 
