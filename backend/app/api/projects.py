@@ -271,3 +271,30 @@ async def get_project(
         updated_at=project.updated_at.isoformat() if project.updated_at else "",
         latest_build=latest_build,
     )
+
+
+@router.post("/{project_id}/build", response_model=dict)
+async def trigger_build(
+    project_id: int,
+    request: BuildRequest,
+    session: AsyncSession = Depends(get_session),
+) -> dict:
+    """Trigger a SwiftPM build for a project."""
+    from app.services.build_service import BuildService
+
+    service = BuildService(session)
+    build = await service.trigger_build(
+        project_id=project_id,
+        target=request.target,
+        configuration=request.configuration,
+    )
+
+    return {
+        "id": build.id,
+        "project_id": build.project_id,
+        "target": build.target.value,
+        "configuration": build.configuration,
+        "status": build.status.value,
+        "started_at": build.started_at.isoformat() if build.started_at else None,
+        "log": build.log,
+    }
