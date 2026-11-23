@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.config import get_settings
 from app.core.database import get_session
 from app.models.project import Project, ProjectStatus
-from app.models.build import Build, BuildStatus
+from app.models.build import Build, BuildStatus, BuildTarget
 from app.services.project_discovery import ProjectDiscoveryService
 
 
@@ -72,6 +72,13 @@ class ScanResponse(BaseModel):
     added_projects: list[str] = Field(default_factory=list)
     updated_projects: list[str] = Field(default_factory=list)
     errors: list[str] = Field(default_factory=list)
+
+
+
+class BuildRequest(BaseModel):
+    """Request model for triggering a build."""
+    target: BuildTarget = BuildTarget.SIMULATOR
+    configuration: str = "debug"
 
 
 # Forward reference resolution
