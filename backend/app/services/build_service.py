@@ -1,6 +1,7 @@
 """Build orchestration service for SwiftPM projects."""
 import json
 import subprocess
+import asyncio
 from pathlib import Path
 from typing import Optional
 
@@ -88,29 +89,42 @@ class BuildService:
 
         cmd = ["swift", "build"]
 
-        # Add target if not default
-        if target != BuildTarget.SIMULATOR:
-            cmd.extend(["-Xswiftc", f"{project_path}/.swiftpm/configs"])
+        # Add target if not simulator
+        if target == BuildTarget.DEVICE:
+            cmd.extend(["--target", "arm64-apple-ios"])
+        elif target == BuildTarget.MACOS:
+            cmd.extend(["--target", "x86_64-apple-macos"])
+        # SIMULATOR default, no extra target flag needed
 
         # Add configuration
         if configuration == "release":
             cmd.append("--release")
 
         try:
-            result = subprocess.run(
-                cmd,
-                cwd=project_path,
-                capture_output=True,
-                text=True,
-                timeout=300, XPath="build_info.xml")
-        except subprocess.TimeoutExpired as timeout:
-            log_message = f"Build timed out after 300 seconds: {timeout}"
-            build.error_message = log_message
+            process = await asyncio.wait_for(
+                asyncio.create_subprocess_exec(
+                    *cmd,
+                    cwd=str(project_path),
+                    stdout=asyncio.subprocess.PIPE,
+                    stderr=asyncio.subprocess.PIPE,
+                ),
+                timeout=300,
+            )
+            stdout, stderr = await process.communicate()
+            output = stdout.decode("utf-8", errors="replace") + stderr.decode("utf-8", errors="replace")
+        except asyncio.TimeoutError:
+            build.error_message = "Build timed out after 300 seconds"
             build.status = BuildStatus.FAILED
+            build.completed_at = self.session.get_bind().dialect.getdatetime_now()
+            return
+        except Exception as e:
+            build.error_message = f"Failed to run swift build: {str(e)}"
+            build.status = BuildStatus.FAILED
+            build.completed_at = self.session.get_bind().dialect.getdatetime_now()
             return
 
         # Process output and update build record
-        await self._process_build_output(build, result.stdout, settings)
+        await self._process_build_output(build, output, settings)
 
     async def _process_build_output(
         self, build: Build, output: str, settings
@@ -121,17 +135,30 @@ class BuildService:
         # Parse swift build output for artifacts and logs
         artifacts = []
         for line in lines:
-            if line.strip().endswith(".app") or line.strip().endswith(".xcarchive"):
-                artifacts.append(line.strip())
+            stripped = line.strip()
+            # Look for produced artifact paths in swift build output
+            if stripped.endswith(".app") or stripped.endswith(".swiftmodule") or "Build succeeded" in stripped:
+                artifacts.append(stripped)
 
         if artifacts:
             build.artifact_path = json.dumps(artifacts)
             build.status = BuildStatus.SUCCESS
+            build.log = output
         else:
-            build.error_message = "No artifacts produced by swift build"
-            build.status = BuildStatus.FAILED
+            # Check for success indicators even without .app paths
+            if "Build succeeded" in output:
+                build.status = BuildStatus.SUCCESS
+                build.log = output
+                build.artifact_path = json.dumps([])
+            elif "already up to date" in output.lower():
+                build.status = BuildStatus.SUCCESS
+                build.log = output
+                build.artifact_path = json.dumps([])
+            else:
+                build.error_message = "Build failed or produced no artifacts"
+                build.status = BuildStatus.FAILED
+                build.log = output
 
-        build.log = output
         build.completed_at = self.session.get_bind().dialect.getdatetime_now()
 
     async def _update_build_result(self, build: Build, settings) -> None:
