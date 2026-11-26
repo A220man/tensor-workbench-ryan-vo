@@ -243,3 +243,33 @@ async def test_scan_workspace_handles_errors(client: AsyncClient, session: Async
         data = response.json()
         # Project validation fails, so project may be marked invalid or not added
         assert "errors" in data
+
+
+@pytest.mark.asyncio
+async def test_build_persists_log_path(client: AsyncClient, session: AsyncSession, sample_project_data: dict):
+    """Build output must be persisted to the log_path column (regression for build.log bug)."""
+    from app.models.build import Build, BuildStatus, BuildTarget
+    from app.services.build_service import BuildService
+
+    project = Project(**sample_project_data, status=ProjectStatus.VALID)
+    session.add(project)
+    await session.commit()
+    await session.refresh(project)
+
+    fake_output = "Build succeeded\n/workspace/TestApp/.build/app/TestApp.app"
+
+    async def fake_run(self, project, build, target, configuration, settings):
+        await self._process_build_output(build, fake_output, settings)
+
+    with patch.object(BuildService, "_run_swift_build", fake_run):
+        service = BuildService(session)
+        build = await service.trigger_build(project.id, target=BuildTarget.SIMULATOR, configuration="debug")
+
+    assert build.status == BuildStatus.SUCCESS
+    assert build.log_path == fake_output
+
+    # Reload from DB to confirm persistence (not a transient attribute)
+    session.expire_all()
+    reloaded = await service.get_build(build.id)
+    assert reloaded is not None
+    assert reloaded.log_path == fake_output

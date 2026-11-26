@@ -1,5 +1,21 @@
 # Changelog
 
+## 1.9.0 — work-in-progress checkpoint
+
+Partial code published for continued development. Known issues: STATUS.md.
+
+## 1.8.1 — work-in-progress checkpoint
+
+### SwiftPM Build Orchestration
+- Backend can trigger `swift build` for a selected project via `POST /projects/{project_id}/build`
+- `BuildService.trigger_build()` service method creates Build record and runs swift build
+- `BuildTarget` enum supports DEVICE, SIMULATOR, MACOS cross-compilation targets
+- Build status tracking with SUCCESS/FAILED states and error messages
+- Build artifacts and log captured after build completion
+
+### Scan Improvement (carried forward)
+- Scan endpoint returns accurate added/updated project counts
+
 ## 1.8.0 — work-in-progress checkpoint
 
 Partial code published for continued development. Known issues: STATUS.md.

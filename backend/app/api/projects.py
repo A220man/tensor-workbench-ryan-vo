@@ -159,7 +159,7 @@ async def list_projects(
                 configuration=build.configuration,
                 started_at=build.started_at.isoformat() if build.started_at else "",
                 completed_at=build.completed_at.isoformat() if build.completed_at else None,
-                log=build.log,
+                log=build.log_path,
             )
 
         project_responses.append(ProjectResponse(
@@ -260,7 +260,7 @@ async def get_project(
             configuration=build.configuration,
             started_at=build.started_at.isoformat() if build.started_at else "",
             completed_at=build.completed_at.isoformat() if build.completed_at else None,
-            log=build.log,
+            log=build.log_path,
         )
 
     return ProjectResponse(
@@ -303,5 +303,5 @@ async def trigger_build(
         "configuration": build.configuration,
         "status": build.status.value,
         "started_at": build.started_at.isoformat() if build.started_at else None,
-        "log": build.log,
+        "log": build.log_path,
     }

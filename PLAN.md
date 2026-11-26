@@ -4,7 +4,7 @@ Each round completes one feature or repair. Future items are planned, not implem
 
 ## Current round
 
-scan-improvement
+swiftpm-build
 
 ## Roadmap
 
@@ -44,7 +44,7 @@ Tests: `backend/tests/test_project_discovery.py`, `backend/tests/test_projects.p
 
 ### swiftpm-build — SwiftPM Build Orchestration
 
-Status: planned
+Status: in_progress
 
 Acceptance:
 - Backend can trigger `swift build` for a selected project
