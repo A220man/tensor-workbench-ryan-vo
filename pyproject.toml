@@ -1,6 +1,6 @@
 [project]
 name = "tensor-workbench-ryan-vo"
-version = "1.8.0"
+version = "1.9.0"
 description = "Cross-platform Xcode replacement: build and deploy iOS apps with SwiftPM on Linux, Windows, macOS"
 readme = "README.md"
 license = {text = "MIT"}

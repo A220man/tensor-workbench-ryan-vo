@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "current_feature": "scan-improvement",
+  "current_feature": "swiftpm-build",
   "features": [
     {
       "id": "project-skeleton",
@@ -67,7 +67,7 @@
     {
       "id": "swiftpm-build",
       "title": "SwiftPM Build Orchestration",
-      "status": "planned",
+      "status": "in_progress",
       "acceptance": [
         "Backend can trigger `swift build` for a selected project",
         "Build logs streamed to frontend via SSE/WebSocket",

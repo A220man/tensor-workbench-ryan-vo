@@ -2,6 +2,7 @@
 import json
 import subprocess
 import asyncio
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
 
@@ -56,7 +57,7 @@ class BuildService:
             target=target,
             configuration=configuration,
             status=BuildStatus.RUNNING,
-            started_at=self.session.get_bind().dialect.getdatetime_now(),
+            started_at=datetime.now(timezone.utc),
         )
         self.session.add(build)
 
@@ -115,12 +116,12 @@ class BuildService:
         except asyncio.TimeoutError:
             build.error_message = "Build timed out after 300 seconds"
             build.status = BuildStatus.FAILED
-            build.completed_at = self.session.get_bind().dialect.getdatetime_now()
+            build.completed_at = datetime.now(timezone.utc)
             return
         except Exception as e:
             build.error_message = f"Failed to run swift build: {str(e)}"
             build.status = BuildStatus.FAILED
-            build.completed_at = self.session.get_bind().dialect.getdatetime_now()
+            build.completed_at = datetime.now(timezone.utc)
             return
 
         # Process output and update build record
@@ -143,33 +144,33 @@ class BuildService:
         if artifacts:
             build.artifact_path = json.dumps(artifacts)
             build.status = BuildStatus.SUCCESS
-            build.log = output
+            build.log_path = output
         else:
             # Check for success indicators even without .app paths
             if "Build succeeded" in output:
                 build.status = BuildStatus.SUCCESS
-                build.log = output
+                build.log_path = output
                 build.artifact_path = json.dumps([])
             elif "already up to date" in output.lower():
                 build.status = BuildStatus.SUCCESS
-                build.log = output
+                build.log_path = output
                 build.artifact_path = json.dumps([])
             else:
                 build.error_message = "Build failed or produced no artifacts"
                 build.status = BuildStatus.FAILED
-                build.log = output
+                build.log_path = output
 
-        build.completed_at = self.session.get_bind().dialect.getdatetime_now()
+        build.completed_at = datetime.now(timezone.utc)
 
     async def _update_build_result(self, build: Build, settings) -> None:
         """Update build result after swift build completes."""
         if build.status == BuildStatus.SUCCESS:
             build.status = BuildStatus.SUCCESS
-            build.completed_at = self.session.get_bind().dialect.getdatetime_now()
+            build.completed_at = datetime.now(timezone.utc)
         else:
             build.status = BuildStatus.FAILED
             build.error_message = "Swift build failed"
-            build.completed_at = self.session.get_bind().dialect.getdatetime_now()
+            build.completed_at = datetime.now(timezone.utc)
 
     async def get_build(self, build_id: int) -> Optional[Build]:
         """Get a build by ID."""
